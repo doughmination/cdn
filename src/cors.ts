@@ -9,36 +9,14 @@ import type { AppEnv } from "./env";
 
 const ALLOWED: string[] = [
   // Mine
-  "clovelib.win",
-  "clove-portfolio.win",
-  "cuddle-blahaj.win",
   "doughmination.co.uk",
   "doughmination.gay",
-  "doughmination.info",
-  "doughmination.me",
-  "doughmination.net",
-  "doughmination.online",
-  "doughmination.org",
-  "doughmination.site",
-  "doughmination.systems",
-  "doughmination.tech",
-  "doughmination.uk",
-  "doughmination.win",
-  "doughmination.xyz",
   "imlesbian.fyi",
-  "transgamers.org",
-  "yuri-lover.win",
+  "pkviewer.xyz",
 
-  // gf
-  "ariare.es",
-  "ari.rip",
+  // Other Sites
   "gaybot.site",
-  "girlsnetwork.dev",
-  "kib.lol",
-  "stupid.cat",
-  "thesafespawn.net",
-
-  // Friends — add domains here
+  "bwah.dev",
 ];
 
 // Exact origins for local development (scheme + host + port must match)

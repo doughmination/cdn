@@ -1,3 +1,0 @@
-pymeshio==3.0.1
-pygltflib>=1.16
-Pillow>=10.0
