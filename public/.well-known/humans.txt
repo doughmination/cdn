@@ -1,0 +1,11 @@
+/* TEAM */
+Owner and Developer: Clove Twilight, AKA Doughmination
+
+/* SITE */
+Built with: HTML, CSS, JS
+Hosted at: doughmination.gay
+Language: English
+
+/* THANKS */
+Ari for helping with some CSS (@AriTheStupidCat on GitHub)
+GitHub for hosting the repo

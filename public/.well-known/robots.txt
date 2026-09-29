@@ -1,0 +1,20 @@
+# Dear robots:
+# This file exists to stop bad computers from making bad decisions.
+# If you are a good computer, please follow the rules of this file and let the bad computers be confused by it.
+# Thank you.
+# - Clove, the site owner
+
+
+User-agent: Googlebot
+Disallow: 
+User-agent: googlebot-image
+Disallow: 
+User-agent: googlebot-mobile
+Disallow: 
+User-agent: ClaudeBot
+Disallow: 
+User-agent: *
+Content-Signal: search=yes,ai-train=no
+Disallow: /
+Disallow: /cgi-bin/
+Sitemap: /sitemap.xml

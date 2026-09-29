@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f5a9b8">
+  <link rel="icon" href="/img/avatars/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <div class="flag-stripe"></div>
+    <h1 class="trans-title">Upload</h1>
+    <p class="note">
+      Signed in as <strong id="who">…</strong> · <a href="/logout">Sign out</a> · <a href="/">Browse</a>
+    </p>
+
+    <label class="field">
+      <span class="label">Folder (blank for the top level)</span>
+      <input class="filter" id="folder" type="text" list="folders" placeholder="img/avatars" autocomplete="off" spellcheck="false">
+      <datalist id="folders"></datalist>
+    </label>
+
+    <label class="drop" id="drop">
+      <input id="picker" type="file" multiple>
+      Drop files here, or click to pick them.
+    </label>
+
+    <div class="actions">
+      <button class="btn" id="go" type="button" disabled>Upload</button>
+      <label><input id="overwrite" type="checkbox"> Replace files that already exist</label>
+      <span id="summary"></span>
+    </div>
+
+    <ul class="listing" id="queue"></ul>
+  </main>
+  <script src="/upload.js"></script>
+</body>
+</html>

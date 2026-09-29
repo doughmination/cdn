@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Licence</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/img/avatars/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <p><a href="/">&larr; back</a></p>
+    <article class="doc" id="doc">Loading licence…</article>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    (async () => {
+      const el = document.getElementById("doc");
+      let md = null;
+      try {
+        md = await (await fetch("/LICENCE.md", { cache: "no-cache" })).text();
+      } catch {
+        el.textContent = "Couldn't load the licence. See /LICENCE.md";
+        return;
+      }
+      const render = window.marked
+        ? (typeof marked.parse === "function" ? marked.parse : marked)
+        : null;
+      if (render) {
+        el.innerHTML = render(md); // trusted, first-party content
+      } else {
+        // Renderer didn't load — show the raw text rather than nothing.
+        el.innerHTML = "";
+        const pre = document.createElement("pre");
+        pre.textContent = md;
+        el.appendChild(pre);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Copy to .dev.vars for `wrangler dev`. In production set these with
+# `wrangler secret put <NAME>` instead.
+
+# Point at a local auth-server (`npm run dev` there, port 8787) and register a
+# client with redirect URI http://localhost:8788/auth/callback.
+AUTH_ISSUER=http://localhost:8787
+OIDC_CLIENT_ID=cdn
+OIDC_CLIENT_SECRET=
+
+# Signs the login cookie. Changing it signs everyone out.
+# Generate with: openssl rand -base64 32
+SESSION_SECRET=

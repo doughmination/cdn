@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# dependencies
+node_modules
+
+# wrangler
+.wrangler
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+assets/

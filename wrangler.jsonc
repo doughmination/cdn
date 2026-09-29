@@ -1,0 +1,46 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "cdn",
+	"main": "src/main.ts",
+	"compatibility_date": "2026-09-01",
+	"observability": {
+		"logs": {
+			"enabled": true
+		}
+	},
+	// The site itself (browser, upload page, licence, .well-known). Uploaded
+	// files live in R2, not here. The worker runs first on every request so it
+	// can add CORS headers and fall through to R2 when no static file matches.
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		"not_found_handling": "none",
+		"run_worker_first": true
+	},
+	"r2_buckets": [
+		{
+			"binding": "BUCKET",
+			"bucket_name": "cdn"
+		}
+	],
+	// Lets src/main.ts serve the repo-root LICENCE.md without a copy in public/.
+	"rules": [
+		{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }
+	],
+	// "routes": [{ "pattern": "m.doughmination.gay", "custom_domain": true }],
+	"dev": {
+		// The auth server's `wrangler dev` already owns 8787.
+		"port": 8788
+	},
+	"vars": {
+		// The SSO server (auth-server/). Must match its ISSUER exactly.
+		"AUTH_ISSUER": "https://auth.doughmination.gay",
+		// Client registered at <AUTH_ISSUER>/admin with redirect URI
+		// https://m.doughmination.gay/auth/callback. Its allowed groups decide
+		// who can sign in, and anyone signed in can upload.
+		"OIDC_CLIENT_ID": "cdn"
+	}
+	// Secrets (wrangler secret put <NAME>):
+	//   OIDC_CLIENT_SECRET  the client secret shown once when the client was created
+	//   SESSION_SECRET      signs the login cookie (openssl rand -base64 32)
+}

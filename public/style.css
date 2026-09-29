@@ -1,0 +1,339 @@
+@font-face {
+  font-family: "Comic Code";
+  src: url("https://fonts.doughmination.co.uk/ComicCode-Regular_2022-05-24-151938_hsmz.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Comic Code";
+  src: url("https://fonts.doughmination.co.uk/ComicCode-Bold_2022-05-24-152309_zqkm.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0a0b10;
+  --bg-deep: #05060a;
+  --fg: #f4f6fb;
+  --muted: #9aa3c2;
+  --accent: #f5a9b8;
+  --accent-alt: #d15f8c;
+  --panel: #12141c;
+  --border: #232838;
+}
+
+* { box-sizing: border-box; }
+
+/* Trans-flag stripe, run above the title instead of animating it as gradient
+   text — same move as the terminal/clunky redesign across the other sites. */
+.flag-stripe {
+  height: 3px;
+  width: 72px;
+  margin: 0 0 0.9rem;
+  background: repeating-linear-gradient(
+    90deg,
+    #5BCEFA 0 20%, #F5A9B8 20% 40%, #ffffff 40% 60%, #F5A9B8 60% 80%, #5BCEFA 80% 100%
+  );
+}
+
+.trans-title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 "Comic Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+main {
+  max-width: 44rem;
+  width: 100%;
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font-size: 1.8rem;
+}
+
+p { margin: 0 0 1rem; }
+
+.note {
+  color: var(--muted);
+  border-left: 3px solid var(--accent);
+  padding-left: 0.9rem;
+  font-size: 0.95rem;
+}
+
+a { color: var(--accent); }
+
+/* Breadcrumbs */
+.crumbs {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.crumbs a { text-decoration: none; }
+.crumbs a:hover { text-decoration: underline; }
+
+.crumbs .sep {
+  color: var(--muted);
+  margin: 0 0.4rem;
+}
+
+/* Filter */
+.filter {
+  width: 100%;
+  background: var(--panel);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.filter:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Folder action bar */
+.folderbar {
+  margin-bottom: 1rem;
+}
+
+.folderbar:empty {
+  margin-bottom: 0;
+}
+
+.folderbtn,
+.btn {
+  display: inline-block;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.folderbtn:hover,
+.btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: #14121a;
+}
+
+.btn:disabled {
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: default;
+}
+
+/* Listing */
+.listing {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.row:first-child { border-top: none; }
+.row:hover { background: var(--panel); }
+
+.row .name {
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row.folder .name { color: var(--accent); }
+.row .name:hover { text-decoration: underline; }
+
+.row .size {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.row .copy {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.15rem 0.55rem;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.row .copy:hover {
+  color: var(--fg);
+  border-color: var(--accent);
+}
+
+.row.empty {
+  color: var(--muted);
+  justify-content: center;
+}
+
+footer {
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Upload page */
+.field {
+  display: block;
+  margin: 1.5rem 0 1rem;
+}
+
+.field .label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.field .filter { margin-bottom: 0; }
+
+.drop {
+  display: block;
+  border: 1px dashed var(--border);
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.drop:hover,
+.drop.over,
+.drop:focus-within {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+.drop input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.actions label { color: var(--muted); }
+.actions input { accent-color: var(--accent); }
+
+.row .status {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.row .status.ok { color: var(--accent); }
+.row .status.err { color: #ff6b81; white-space: normal; text-align: right; }
+
+.row .remove {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.15rem 0.55rem;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.row .remove:hover { color: var(--fg); border-color: var(--accent); }
+
+@media (max-width: 520px) {
+  body { padding: 1.25rem 1rem; }
+  .row { flex-wrap: wrap; }
+}
+
+/* Rendered markdown (licence page) */
+.doc {
+  line-height: 1.7;
+}
+
+.doc h1 {
+  font-size: 1.5rem;
+  margin: 1.8rem 0 0.75rem;
+}
+
+.doc h2 {
+  font-size: 1.2rem;
+  margin: 1.5rem 0 0.6rem;
+}
+
+.doc h3 { font-size: 1.05rem; }
+
+.doc hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.6rem 0;
+}
+
+.doc ul,
+.doc ol {
+  padding-left: 1.3rem;
+}
+
+.doc li { margin: 0.3rem 0; }
+
+.doc a { color: var(--accent); }
+
+.doc code {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.9em;
+}
+
+.doc pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

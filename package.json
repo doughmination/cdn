@@ -1,0 +1,22 @@
+{
+  "name": "cdn",
+  "version": "0.2.0",
+  "description": "Clove's asset host: a Cloudflare Worker serving files from R2, with an SSO-gated upload page.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types --env-interface Env",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.13.9",
+    "jose": "^6.2.12"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260924.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.137.0"
+  }
+}

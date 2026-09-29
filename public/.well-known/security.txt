@@ -1,0 +1,6 @@
+# Security contact for Clove / doughmination.
+# If you find a vulnerability in any of my sites, please reach out.
+Contact: mailto:admin@doughmination.win
+Expires: 2027-08-06T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://m.doughmination.gay/.well-known/security.txt
