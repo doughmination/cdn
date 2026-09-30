@@ -17,6 +17,7 @@ const ALLOWED: string[] = [
   // Other Sites
   "gaybot.site",
   "bwah.dev",
+  "is-a.dev"
 ];
 
 // Exact origins for local development (scheme + host + port must match)
