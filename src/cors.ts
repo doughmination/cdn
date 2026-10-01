@@ -20,21 +20,26 @@ const ALLOWED: string[] = [
   "is-a.dev"
 ];
 
-// Exact origins for local development (scheme + host + port must match)
-const DEV_ORIGINS: string[] = [
-  "http://localhost",
-  "http://127.0.0.1",
-];
 
 function isAllowed(origin: string): boolean {
-  if (DEV_ORIGINS.includes(origin)) return true;
+  let url: URL;
 
-  let host: string;
   try {
-    host = new URL(origin).hostname.toLowerCase();
+    url = new URL(origin);
   } catch {
     return false;
   }
+
+  const host = url.hostname.toLowerCase();
+
+  // Local development: allow any port on localhost / 127.0.0.1
+  if (
+    url.protocol === "http:" &&
+    (host === "localhost" || host === "127.0.0.1")
+  ) {
+    return true;
+  }
+
   return ALLOWED.some(
     (domain) => host === domain || host.endsWith("." + domain),
   );
