@@ -8,7 +8,7 @@ const FILE_CACHE = "public, max-age=86400";
 const MAX_KEY_BYTES = 1024;
 
 // Paths the viewer itself answers, so a folder there could never be browsed.
-const RESERVED = ["_app/", "api/", "auth/", "login", "logout", "upload", "licence", "genshin/", "LICENCE.md", ".well-known/"];
+const RESERVED = ["_app/", "api/", "auth/", "login", "logout", "upload", "licence", "genshin/", "LICENCE.md", ".well-known/", "favicon.svg", "favicon.png", "style.css", "sfx.js"];
 
 // Known extensions always get these, since browsers often send nothing useful
 // (.glb, fonts, .mov and friends). Anything else keeps what the uploader sent.
