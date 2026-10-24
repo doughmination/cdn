@@ -6,17 +6,22 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
+    "build": "vite build",
     "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types --env-interface Env",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "hono": "^4.13.9",
-    "jose": "^6.2.12"
+    "hono": "^4.13.13",
+    "jose": "^6.2.13",
+    "marked": "^18.1.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260924.1",
+    "@cloudflare/workers-types": "^5.20261024.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "svelte": "^5.57.2",
     "typescript": "^7.0.2",
-    "wrangler": "^4.137.0"
+    "vite": "^8.3.5",
+    "wrangler": "^4.152.0"
   }
 }

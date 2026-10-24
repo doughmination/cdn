@@ -337,3 +337,53 @@ footer {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* File preview */
+.filename {
+  font-size: 1.4rem;
+  overflow-wrap: anywhere;
+}
+
+.preview {
+  border: 1px solid var(--border);
+  background: var(--bg-deep);
+}
+
+.preview img,
+.preview video {
+  display: block;
+  max-width: 100%;
+  max-height: 75vh;
+  margin: 0 auto;
+}
+
+.preview audio {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+}
+
+.preview iframe {
+  display: block;
+  width: 100%;
+  height: 75vh;
+  border: none;
+}
+
+.preview pre {
+  margin: 0;
+  padding: 0.9rem;
+  max-height: 75vh;
+  overflow: auto;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  tab-size: 2;
+}
+
+.preview .empty {
+  margin: 0;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted);
+}

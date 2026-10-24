@@ -1,14 +1,14 @@
 // Everything backed by the R2 bucket: serving files, listing them for the
 // browser, and uploads.
 
-import type { AppContext } from "./env";
+import { rawBase, type AppContext } from "./env";
 
 /** Browser cache for served files. URLs can change any time, so nothing longer. */
 const FILE_CACHE = "public, max-age=86400";
 const MAX_KEY_BYTES = 1024;
 
-// Paths the worker itself answers, so an object stored there could never be served.
-const RESERVED = ["api/", "auth/", "login", "logout", "upload", "genshin/", "LICENCE.md", ".well-known/"];
+// Paths the viewer itself answers, so a folder there could never be browsed.
+const RESERVED = ["_app/", "api/", "auth/", "login", "logout", "upload", "licence", "genshin/", "LICENCE.md", ".well-known/"];
 
 // Known extensions always get these, since browsers often send nothing useful
 // (.glb, fonts, .mov and friends). Anything else keeps what the uploader sent.
@@ -42,6 +42,12 @@ const TYPES: Record<string, string> = {
   woff2: "font/woff2",
 };
 
+export function fmtSize(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function knownType(key: string): string | undefined {
   const dot = key.lastIndexOf(".");
   return dot > key.lastIndexOf("/") ? TYPES[key.slice(dot + 1).toLowerCase()] : undefined;
@@ -62,7 +68,13 @@ export function checkKey(key: string): string | null {
   return null;
 }
 
-/** GET/HEAD /<key> straight out of R2, with conditional and range support. */
+/** True if any object lives under `<prefix>/`. */
+export async function isFolder(c: AppContext, prefix: string): Promise<boolean> {
+  const page = await c.env.BUCKET.list({ prefix: `${prefix}/`, limit: 1 });
+  return page.objects.length > 0;
+}
+
+/** GET/HEAD /api/files/<key> straight out of R2, with conditional and range support. */
 export async function serveFile(c: AppContext, key: string): Promise<Response | null> {
   const bucket = c.env.BUCKET;
   const req = c.req.raw;
@@ -120,7 +132,7 @@ export async function listFiles(c: AppContext): Promise<Response> {
   } while (cursor);
 
   c.header("Cache-Control", "public, max-age=60");
-  return c.json({ count: files.length, files });
+  return c.json({ count: files.length, raw: rawBase(c.env), files });
 }
 
 /** PUT /api/files/<key> — raw request body becomes the object. */
@@ -131,10 +143,6 @@ export async function uploadFile(c: AppContext, key: string, uploader: string): 
   const length = Number(c.req.header("Content-Length"));
   const body = c.req.raw.body;
   if (!body || !Number.isFinite(length)) return c.json({ error: "Send the file as the request body." }, 411);
-
-  // A static site file at the same path would always win, hiding the upload.
-  const shadow = await c.env.ASSETS.fetch(new Request(new URL(`/${key}`, c.req.url), { method: "HEAD" }));
-  if (shadow.ok) return c.json({ error: "That path is used by the site itself." }, 409);
 
   if (c.req.query("overwrite") !== "1" && (await c.env.BUCKET.head(key))) {
     return c.json({ error: "A file already exists at that path." }, 409);
@@ -147,7 +155,7 @@ export async function uploadFile(c: AppContext, key: string, uploader: string): 
     httpMetadata: { contentType },
     customMetadata: { uploadedBy: uploader },
   });
-  return c.json({ path: obj.key, size: obj.size, url: new URL(`/${encodeKey(obj.key)}`, c.req.url).toString() }, 201);
+  return c.json({ path: obj.key, size: obj.size, url: `${rawBase(c.env)}/${encodeKey(obj.key)}` }, 201);
 }
 
 export function encodeKey(key: string): string {

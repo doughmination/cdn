@@ -7,6 +7,9 @@ AUTH_ISSUER=http://localhost:8787
 OIDC_CLIENT_ID=cdn
 OIDC_CLIENT_SECRET=
 
+# The local bucket has no public domain, so serve files through the worker.
+RAW_URL=http://localhost:8788/api/files
+
 # Signs the login cookie. Changing it signs everyone out.
 # Generate with: openssl rand -base64 32
 SESSION_SECRET=
