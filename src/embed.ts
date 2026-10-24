@@ -17,6 +17,11 @@ const DISCORD_EXCERPT = 1200;
 const DISCORD_MAX_BYTES = 3000;
 /** Matches --accent in public/style.css. */
 const ACCENT = 0xeb459e;
+/** Formats Discord (and most other crawlers) can render as embed media. SVG, ICO and BMP aren't. */
+const EMBEDDABLE = new Set("png jpg jpeg gif webp avif mp4 webm mov".split(" "));
+
+/** Image or video that crawlers can actually show; anything else gets the plain card. */
+const embeddable = (key: string) => EMBEDDABLE.has(extensionOf(key));
 
 const escape = (s: string) => s.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 
@@ -42,7 +47,7 @@ export async function fileEmbed(c: AppContext, obj: R2Object, page: Response): P
     ["twitter:title", name],
     ["twitter:description", description],
   ];
-  if (kind === "image") {
+  if (kind === "image" && embeddable(obj.key)) {
     meta.push(["og:type", "website"], ["og:image", url], ["twitter:card", "summary_large_image"], ["twitter:image", url]);
     if (type) meta.push(["og:image:type", type]);
   } else if (kind === "video") {
@@ -90,7 +95,7 @@ function discordComponent(c: AppContext, obj: R2Object, name: string, url: strin
   ];
   const build = (body: object[]) => ({ type: 17, accent_color: ACCENT, components: [...body, ...footer] });
 
-  if (kind === "image" || kind === "video") {
+  if ((kind === "image" || kind === "video") && embeddable(obj.key)) {
     return build([heading, { type: 12, items: [{ media: { url }, description: name }] }]);
   }
 
