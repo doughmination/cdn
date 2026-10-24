@@ -12,8 +12,9 @@ export function messagePage(c: AppContext, title: string, body: string, status: 
       `<meta name="viewport" content="width=device-width, initial-scale=1.0">` +
       `<title>${escape(title)}</title><meta name="robots" content="noindex">` +
       `<link rel="stylesheet" href="/style.css"></head>` +
-      `<body><main><div class="flag-stripe"></div><h1 class="trans-title">${escape(title)}</h1>` +
-      `${body}</main></body></html>`,
+      `<body><div class="backdrop" aria-hidden="true"></div>` +
+      `<main class="wrap"><section class="hero"><p class="eyebrow">CDN</p><h1>${escape(title)}</h1>` +
+      `<div class="lede">${body}</div></section></main></body></html>`,
     status,
   );
 }

@@ -1,5 +1,7 @@
 <script lang="ts">
   import { fetchList, fetchMe, type Listing } from "./lib/files";
+  import Footer from "./lib/Footer.svelte";
+  import Header from "./lib/Header.svelte";
   import { route } from "./lib/router.svelte";
   import Browse from "./routes/Browse.svelte";
   import Licence from "./routes/Licence.svelte";
@@ -34,14 +36,18 @@
   );
 </script>
 
-{#if route.path === "/upload"}
-  <Upload />
-{:else if route.path === "/licence"}
-  <Licence />
-{:else if path === null}
-  <NotFound />
-{:else if file && listing}
-  <Preview {file} raw={listing.raw} />
-{:else}
-  <Browse prefix={path} {listing} {failed} {canUpload} />
-{/if}
+<Header />
+<main class="wrap">
+  {#if route.path === "/upload"}
+    <Upload />
+  {:else if route.path === "/licence"}
+    <Licence />
+  {:else if path === null}
+    <NotFound />
+  {:else if file && listing}
+    <Preview {file} raw={listing.raw} />
+  {:else}
+    <Browse prefix={path} {listing} {failed} {canUpload} />
+  {/if}
+</main>
+<Footer count={listing?.count} />

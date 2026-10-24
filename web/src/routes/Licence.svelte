@@ -1,6 +1,6 @@
 <script lang="ts">
   import { marked } from "marked";
-  import { link } from "../lib/router.svelte";
+  import Hero from "../lib/Hero.svelte";
 
   const doc = fetch("/LICENCE.md", { cache: "no-cache" }).then((r) => {
     if (!r.ok) throw new Error(String(r.status));
@@ -10,8 +10,8 @@
 
 <svelte:head><title>Licence</title></svelte:head>
 
-<p><a href="/" use:link>&larr; back</a></p>
-<article class="doc">
+<Hero eyebrow="Legal" title="Licence" />
+<article class="doc content">
   {#await doc}
     Loading licence…
   {:then md}

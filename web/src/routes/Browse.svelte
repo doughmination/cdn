@@ -3,6 +3,7 @@
   // is the folder: /f/Comic-Code shows everything under "f/Comic-Code/".
 
   import Crumbs from "../lib/Crumbs.svelte";
+  import Hero from "../lib/Hero.svelte";
   import Icon from "../lib/Icon.svelte";
   import { copyText, encodePath, fmtSize, type Listing } from "../lib/files";
   import { link } from "../lib/router.svelte";
@@ -55,52 +56,51 @@
 {#if missing}
   <NotFound />
 {:else}
-  <div class="flag-stripe"></div>
-  <h1 class="trans-title">Hey, this is my CDN.</h1>
-  <p>Assets for my other sites. Meant for me, but you're welcome to look around.</p>
-  <p class="note">
-    Please don't hotlink. I can change these URLs at any point without
-    warning, so anything pointing here may break.
-  </p>
+  {#if prefix}
+    <Hero eyebrow="Folder" title={prefix.slice(prefix.lastIndexOf("/") + 1)} />
+  {:else}
+    <Hero eyebrow="Clove's CDN" title="Hey, this is my CDN.">
+      <p class="lede">Assets for my other sites. Meant for me, but you're welcome to look around.</p>
+      <p class="note">
+        Please don't hotlink. I can change these URLs at any point without
+        warning, so anything pointing here may break.
+      </p>
+    </Hero>
+  {/if}
 
-  <Crumbs path={prefix} />
+  <div class="content">
+    <Crumbs path={prefix} />
 
-  <!-- Uploaders get a shortcut to the upload page, aimed at this folder. -->
-  <div class="folderbar">
-    {#if canUpload}
-      <a class="folderbtn" href="/upload?folder={encodeURIComponent(prefix)}"><Icon name="upload" />Upload here</a>
-    {/if}
-  </div>
+    <!-- Uploaders get a shortcut to the upload page, aimed at this folder. -->
+    <div class="folderbar">
+      {#if canUpload}
+        <a class="folderbtn" href="/upload?folder={encodeURIComponent(prefix)}"><Icon name="upload" />Upload here</a>
+      {/if}
+    </div>
 
-  <input class="filter" type="search" placeholder="Filter this folder…" autocomplete="off" bind:value={filter} />
+    <input class="filter" type="search" placeholder="Filter this folder…" autocomplete="off" bind:value={filter} />
 
-  <ul class="listing">
-    {#if failed}
-      <li class="row empty">Couldn't load the file list.</li>
-    {:else if listing}
-      {#each folders as name (name)}
-        <li class="row folder">
-          <a class="name" href={childHref(name)} use:link><Icon name="folder" />{name}/</a>
-        </li>
-      {/each}
-      {#each files as f (f.path)}
-        <li class="row file">
-          <a class="name" href={childHref(f.name)} use:link><Icon name="file" />{f.name}</a>
-          <span class="size">{fmtSize(f.size)}</span>
-          <button class="copy" title="Copy URL" onclick={(e) => copyText(e.currentTarget, fileUrl(f.path))}>copy</button>
-        </li>
+    <ul class="listing">
+      {#if failed}
+        <li class="row empty">Couldn't load the file list.</li>
+      {:else if !listing}
+        <li class="row empty">Loading…</li>
       {:else}
-        {#if !folders.length}<li class="row empty">Nothing here.</li>{/if}
-      {/each}
-    {/if}
-  </ul>
-
-  <footer>
-    <span>
-      {#if failed}{:else if listing}{listing.count} files · © {new Date().getFullYear()} · assets may move without notice ·
-      {:else}loading… ·{/if}
-    </span>
-    <a href="/licence" use:link>Licence</a> ·
-    <a href="/upload">Upload</a>
-  </footer>
+        {#each folders as name (name)}
+          <li class="row folder">
+            <a class="name" href={childHref(name)} use:link><Icon name="folder" />{name}/</a>
+          </li>
+        {/each}
+        {#each files as f (f.path)}
+          <li class="row file">
+            <a class="name" href={childHref(f.name)} use:link><Icon name="file" />{f.name}</a>
+            <span class="size">{fmtSize(f.size)}</span>
+            <button class="copy" title="Copy URL" onclick={(e) => copyText(e.currentTarget, fileUrl(f.path))}>copy</button>
+          </li>
+        {:else}
+          {#if !folders.length}<li class="row empty">Nothing here.</li>{/if}
+        {/each}
+      {/if}
+    </ul>
+  </div>
 {/if}

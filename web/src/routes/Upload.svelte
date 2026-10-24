@@ -2,6 +2,7 @@
   // Upload page. Files go one at a time as raw PUTs to /api/files/<path>; the
   // worker checks the SSO session and writes them into the R2 bucket.
 
+  import Hero from "../lib/Hero.svelte";
   import { allFolders, copyText, encodePath, fetchList, fetchMe, fmtSize } from "../lib/files";
 
   interface Item {
@@ -94,74 +95,74 @@
 
 <svelte:head><title>Upload</title></svelte:head>
 
-<div class="flag-stripe"></div>
-<h1 class="trans-title">Upload</h1>
-<p class="note">
-  Signed in as <strong>{who}</strong> · <a href="/logout">Sign out</a> · <a href="/{encodePath(folder)}">Browse files</a>
-</p>
+<Hero eyebrow="Signed in as {who}" title="Upload">
+  <p class="lede"><a href="/{encodePath(folder)}">Browse this folder</a> · <a href="/logout">Sign out</a></p>
+</Hero>
 
-<label class="field">
-  <span class="label">Folder (blank for the top level)</span>
-  <input class="filter" type="text" list="folders" placeholder="img/avatars" autocomplete="off" spellcheck="false" bind:value={folderInput} />
-  <datalist id="folders">
-    {#each suggestions as d (d)}<option value={d}></option>{/each}
-  </datalist>
-</label>
+<div class="content">
+  <label class="field">
+    <span class="label">Folder (blank for the top level)</span>
+    <input class="filter" type="text" list="folders" placeholder="img/avatars" autocomplete="off" spellcheck="false" bind:value={folderInput} />
+    <datalist id="folders">
+      {#each suggestions as d (d)}<option value={d}></option>{/each}
+    </datalist>
+  </label>
 
-<label
-  class="drop"
-  class:over
-  ondragenter={dragOver}
-  ondragover={dragOver}
-  ondragleave={() => (over = false)}
-  ondrop={(e) => {
-    e.preventDefault();
-    over = false;
-    add(e.dataTransfer?.files);
-  }}
->
-  <input
-    type="file"
-    multiple
-    onchange={(e) => {
-      add(e.currentTarget.files);
-      e.currentTarget.value = "";
+  <label
+    class="drop"
+    class:over
+    ondragenter={dragOver}
+    ondragover={dragOver}
+    ondragleave={() => (over = false)}
+    ondrop={(e) => {
+      e.preventDefault();
+      over = false;
+      add(e.dataTransfer?.files);
     }}
-  />
-  Drop files here, or click to pick them.
-</label>
+  >
+    <input
+      type="file"
+      multiple
+      onchange={(e) => {
+        add(e.currentTarget.files);
+        e.currentTarget.value = "";
+      }}
+    />
+    Drop files here, or click to pick them.
+  </label>
 
-<div class="actions">
-  <button class="btn" type="button" disabled={busy || pending === 0} onclick={uploadAll}>
-    {pending > 1 ? `Upload ${pending} files` : "Upload"}
-  </button>
-  <label><input type="checkbox" bind:checked={overwrite} /> Replace files that already exist</label>
-  <span>{done ? `${done} uploaded` : ""}</span>
+  <div class="actions">
+    <button class="btn" type="button" disabled={busy || pending === 0} onclick={uploadAll}>
+      {pending > 1 ? `Upload ${pending} files` : "Upload"}
+    </button>
+    <label><input type="checkbox" bind:checked={overwrite} /> Replace files that already exist</label>
+    <span>{done ? `${done} uploaded` : ""}</span>
+  </div>
+
+  <ul class="listing">
+    {#each queue as item, i (item)}
+      <li class="row file">
+        {#if item.status === "done"}
+          <a class="name" href={item.url} target="_blank" rel="noopener">{item.file.name}</a>
+        {:else}
+          <span class="name">{item.file.name}</span>
+        {/if}
+        <span class="size">{fmtSize(item.file.size)}</span>
+        {#if item.status === "uploading"}
+          <span class="status">{item.progress}%</span>
+        {:else if item.status === "done"}
+          <span class="status ok">done</span>
+          <button class="copy" title="Copy URL" onclick={(e) => copyText(e.currentTarget, item.url)}>copy</button>
+        {:else if item.status === "error"}
+          <span class="status err">{item.message}</span>
+        {:else if busy}
+          <span class="status">waiting</span>
+        {:else}
+          <button class="remove" onclick={() => queue.splice(i, 1)}>remove</button>
+        {/if}
+      </li>
+    {:else}
+      <li class="row empty">No files picked yet.</li>
+    {/each}
+  </ul>
 </div>
-
-<ul class="listing">
-  {#each queue as item, i (item)}
-    <li class="row file">
-      {#if item.status === "done"}
-        <a class="name" href={item.url} target="_blank" rel="noopener">{item.file.name}</a>
-      {:else}
-        <span class="name">{item.file.name}</span>
-      {/if}
-      <span class="size">{fmtSize(item.file.size)}</span>
-      {#if item.status === "uploading"}
-        <span class="status">{item.progress}%</span>
-      {:else if item.status === "done"}
-        <span class="status ok">done</span>
-        <button class="copy" title="Copy URL" onclick={(e) => copyText(e.currentTarget, item.url)}>copy</button>
-      {:else if item.status === "error"}
-        <span class="status err">{item.message}</span>
-      {:else if busy}
-        <span class="status">waiting</span>
-      {:else}
-        <button class="remove" onclick={() => queue.splice(i, 1)}>remove</button>
-      {/if}
-    </li>
-  {:else}
-    <li class="row empty">No files picked yet.</li>
-  {/each}
-</ul>
