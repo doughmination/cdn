@@ -1,37 +1,44 @@
 // Link embeds for file pages. Crawlers (Discord, Bluesky, iMessage, …) don't
-// run the app, so the worker swaps the shell's generic OpenGraph tags for ones
+// run the app, so the worker swaps the shell's generic tags for ones
 // describing the file: the image itself, a playable video or audio, or the
 // first few lines of a text file.
 //
-// Discord's crawler is the exception: it gets the file as a Components V2
-// message payload instead of a page.
+// Discord also reads a Components V2 container from a
+// <script id="discord:component-embed"> in the page (same as Meta.svelte in
+// ~/projects/web), and falls back to the OpenGraph tags without it.
 
 import { extensionOf, kindOf } from "../shared/kinds";
 import { encodeKey, fmtSize } from "./files";
 import { rawBase, type AppContext } from "./env";
 
 const EXCERPT = 280;
-const DISCORD_EXCERPT = 1500;
-const ACCENT = 0xf5a9b8;
-
-export const isDiscord = (c: AppContext) => /Discordbot/i.test(c.req.header("User-Agent") ?? "");
+const DISCORD_EXCERPT = 1200;
+/** Discord's cap on the component embed's JSON. */
+const DISCORD_MAX_BYTES = 3000;
+/** Matches --accent in public/style.css. */
+const ACCENT = 0xeb459e;
 
 const escape = (s: string) => s.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+
+// Escape '<' so the JSON can't close the script tag early.
+const toJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 
 export async function fileEmbed(c: AppContext, obj: R2Object, page: Response): Promise<Response> {
   const name = obj.key.slice(obj.key.lastIndexOf("/") + 1);
   const url = `${rawBase(c.env)}/${encodeKey(obj.key)}`;
+  const pageUrl = new URL(c.req.url).href;
   const type = obj.httpMetadata?.contentType;
   const kind = kindOf(obj.key);
 
   let description = `${fmtSize(obj.size)} · ${obj.key}`;
-  if (kind === "text") description = (await excerpt(c, obj.key, EXCERPT)) || description;
+  const text = kind === "text" ? await excerpt(c, obj.key, DISCORD_EXCERPT) : "";
+  if (text) description = squash(text, EXCERPT);
 
   const meta: [string, string][] = [
     ["og:site_name", "Clove's CDN"],
     ["og:title", name],
     ["og:description", description],
-    ["og:url", new URL(c.req.url).href],
+    ["og:url", pageUrl],
     ["twitter:title", name],
     ["twitter:description", description],
   ];
@@ -48,11 +55,14 @@ export async function fileEmbed(c: AppContext, obj: R2Object, page: Response): P
     meta.push(["og:type", "website"], ["twitter:card", "summary"]);
   }
 
+  const component = discordComponent(c, obj, name, url, pageUrl, text);
   const tags =
     `<meta name="description" content="${escape(description)}">` +
     meta
       .map(([k, v]) => `<meta ${k.startsWith("og:") ? "property" : "name"}="${k}" content="${escape(v)}">`)
-      .join("");
+      .join("") +
+    `<link rel="canonical" href="${escape(pageUrl)}">` +
+    `<script id="discord:component-embed" type="application/json">${toJson({ component })}</script>`;
 
   return new HTMLRewriter()
     .on('meta[property^="og:"], meta[name^="twitter:"], meta[name="description"]', {
@@ -63,46 +73,62 @@ export async function fileEmbed(c: AppContext, obj: R2Object, page: Response): P
     .transform(page);
 }
 
-/** The file as a Discord Components V2 message: a container with its name, the media, and links. */
-export async function discordEmbed(c: AppContext, obj: R2Object): Promise<Response> {
-  const name = obj.key.slice(obj.key.lastIndexOf("/") + 1);
-  const url = `${rawBase(c.env)}/${encodeKey(obj.key)}`;
-  const page = new URL(c.req.url).href;
+/** One Container: name and size, the media or a code excerpt, then link buttons. */
+function discordComponent(c: AppContext, obj: R2Object, name: string, url: string, pageUrl: string, text: string) {
   const kind = kindOf(obj.key);
-
-  const body: object[] = [{ type: 10, content: `### [${name}](${page})\n-# ${fmtSize(obj.size)} · ${obj.key}` }];
-  if (kind === "image" || kind === "video") {
-    body.push({ type: 12, items: [{ media: { url }, description: name }] });
-  } else if (kind === "text") {
-    const text = await excerpt(c, obj.key, DISCORD_EXCERPT, true);
-    // A ``` inside the file would close the code block early.
-    const fence = "```";
-    if (text) body.push({ type: 10, content: `${fence}${extensionOf(obj.key)}\n${text.replaceAll(fence, "`​``")}\n${fence}` });
-  }
-  body.push(
+  const heading = { type: 10, content: `## ${name}\n-# ${fmtSize(obj.size)} · ${obj.key}` };
+  const footer = [
     { type: 14 },
     {
       type: 1,
       components: [
         { type: 2, style: 5, label: "Open raw", url },
-        { type: 2, style: 5, label: "View on CDN", url: page },
+        { type: 2, style: 5, label: "View on CDN", url: pageUrl },
       ],
     },
-  );
+    { type: 10, content: `-# ${new URL(c.req.url).host}` },
+  ];
+  const build = (body: object[]) => ({ type: 17, accent_color: ACCENT, components: [...body, ...footer] });
 
-  // 1 << 15 is IS_COMPONENTS_V2.
-  return c.json({ flags: 1 << 15, components: [{ type: 17, accent_color: ACCENT, components: body }] });
+  if (kind === "image" || kind === "video") {
+    return build([heading, { type: 12, items: [{ media: { url }, description: name }] }]);
+  }
+
+  // Everything else: the heading beside the site icon, plus a code block for text.
+  const section = {
+    type: 9,
+    components: [heading],
+    accessory: { type: 11, media: { url: new URL("/favicon.png", c.req.url).href } },
+  };
+  if (!text) return build([section]);
+
+  // A ``` inside the file would close the code block early, so break it with a zero-width space.
+  const fence = "```";
+  const code = text.replaceAll(fence, "`\u200b``");
+  const bytes = (data: unknown) => new TextEncoder().encode(toJson({ component: data })).length;
+  // Shrink the excerpt until the whole embed fits Discord's limit.
+  for (let len = code.length; len > 0; len = Math.floor(len * 0.8)) {
+    const cut = len < code.length ? `${code.slice(0, len)}…` : code;
+    const component = build([section, { type: 10, content: `${fence}${extensionOf(obj.key)}\n${cut}\n${fence}` }]);
+    if (bytes(component) <= DISCORD_MAX_BYTES) return component;
+  }
+  return build([section]);
 }
 
-/**
- * The start of a text file, for a description. Whitespace is squashed unless
- * `keepLines` (Discord shows it as a code block, so lines matter there).
- */
-async function excerpt(c: AppContext, key: string, max: number, keepLines = false): Promise<string> {
+/** The start of a text file, line breaks kept, trimmed to `max` characters. */
+async function excerpt(c: AppContext, key: string, max: number): Promise<string> {
   const obj = await c.env.BUCKET.get(key, { range: { offset: 0, length: max * 4 } });
   if (!obj) return "";
-  // A cut can land mid-character; the decoder swaps that for U+FFFD, which the trim drops.
-  let text = (await obj.text()).replace(/�+$/, "");
-  text = keepLines ? text.replace(/\r\n?/g, "\n").replace(/^\n+|\s+$/g, "") : text.replace(/\s+/g, " ").trim();
+  // A cut can land mid-character; the decoder swaps that for U+FFFD, which this drops.
+  const text = (await obj.text())
+    .replace(/\uFFFD+$/, "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/^\n+|\s+$/g, "");
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+/** One line of at most `max` characters, for descriptions. */
+function squash(text: string, max: number): string {
+  const line = text.replace(/\s+/g, " ").trim();
+  return line.length > max ? `${line.slice(0, max - 1)}…` : line;
 }

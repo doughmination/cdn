@@ -9,13 +9,13 @@
 //   3. Static site files (the Svelte app from ./dist, styles, .well-known, …)
 //   4. Otherwise the app shell, if the path is a folder or a file in R2:
 //      /img browses "img/", /img/foo.png previews that file (with link-embed
-//      tags for that file, or Components V2 JSON for Discord; see embed.ts)
+//      tags for that file, Discord's component embed included; see embed.ts)
 
 import { Hono } from "hono";
 import licence from "../LICENCE.md";
 import { auth, getSession } from "./auth";
 import { cors } from "./cors";
-import { discordEmbed, fileEmbed, isDiscord } from "./embed";
+import { fileEmbed } from "./embed";
 import { issuer, type AppContext, type AppEnv } from "./env";
 import { isFolder, listFiles, serveFile, uploadFile } from "./files";
 import { genshinUi } from "./genshin";
@@ -93,7 +93,7 @@ app.get("*", async (c) => {
   const key = keyFromPath(c);
   if (key === null) return notFound(c);
   const obj = key.endsWith("/") ? null : await c.env.BUCKET.head(key);
-  if (obj) return isDiscord(c) ? discordEmbed(c, obj) : fileEmbed(c, obj, await shell(c));
+  if (obj) return fileEmbed(c, obj, await shell(c));
   return (await isFolder(c, key.replace(/\/+$/, ""))) ? shell(c) : notFound(c);
 });
 
