@@ -302,6 +302,13 @@ header nav a[aria-current="page"] { color: var(--text); }
   color: var(--text);
 }
 
+.btn.danger:hover:not(:disabled),
+.row .delete:hover:not(:disabled) {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 4px rgb(237 66 69 / 15%);
+  color: var(--danger);
+}
+
 .btn:disabled {
   color: var(--muted);
   cursor: default;
@@ -353,25 +360,34 @@ header nav a[aria-current="page"] { color: var(--text); }
 
 .row .status.ok { color: var(--accent); }
 .row .status.err { color: var(--danger); text-align: right; white-space: normal; }
+.actions .status.err { color: var(--danger); }
 
 .row.empty {
   justify-content: center;
   color: var(--muted);
 }
 
-/* Upload panel (in a folder, signed in) */
+/* Folder tools and upload panel (signed in) */
 
-.uploader { margin-bottom: 1.5rem; }
-.uploader .listing { margin-bottom: 1rem; }
-.uploader .actions { margin-bottom: 0; }
+.newfolder {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
 
-.uploader .sub {
+.newfolder .filter {
   flex: 1;
   min-width: 12rem;
   width: auto;
   margin-bottom: 0;
   padding: 0.35rem 0.9rem;
 }
+
+.uploader { margin-bottom: 1.5rem; }
+.uploader .listing { margin-bottom: 1rem; }
+.uploader .actions { margin-bottom: 0; }
 
 .drop {
   display: flex;

@@ -5,7 +5,7 @@
 // Order of business for a request:
 //
 //   1. CORS (allowlisted origins get Access-Control-Allow-Origin)
-//   2. Worker routes: sign-in, the upload API, the Genshin proxy
+//   2. Worker routes: sign-in, the file API (uploads, folders, deletes), the Genshin proxy
 //   3. Static site files (the Svelte app from ./dist, styles, .well-known, …)
 //   4. Otherwise the app shell, if the path is a folder or a file in R2:
 //      /img browses "img/", /img/foo.png previews that file (with link-embed
@@ -17,7 +17,7 @@ import { auth, getSession } from "./auth";
 import { cors } from "./cors";
 import { fileEmbed } from "./embed";
 import { issuer, type AppContext, type AppEnv } from "./env";
-import { isFolder, listFiles, serveFile, uploadFile } from "./files";
+import { createFolder, deleteFile, isFolder, listFiles, serveFile, uploadFile } from "./files";
 import { genshinUi } from "./genshin";
 
 const app = new Hono<AppEnv>();
@@ -47,19 +47,37 @@ app.get("/api/me", async (c) => {
 
 app.get("/api/list", listFiles);
 
+// Every write must come from this site (CSRF: the cookie is SameSite=Lax
+// already) and be signed in.
+app.on(["PUT", "POST", "DELETE"], "/api/*", async (c, next) => {
+  if (c.req.header("Origin") !== new URL(c.req.url).origin) return c.json({ error: "Cross-site request refused." }, 403);
+  const session = await getSession(c);
+  if (!session) return c.json({ error: "Signed out. Reload the page to sign in again." }, 401);
+  c.set("session", session);
+  await next();
+});
+
 app.get("/api/files/*", async (c) => {
   const key = keyFromPath(c, "/api/files/");
   return (key && (await serveFile(c, key))) || c.json({ error: "Not found" }, 404);
 });
 
 app.put("/api/files/*", async (c) => {
-  // CSRF: the cookie is SameSite=Lax already, and uploads must come from this site.
-  if (c.req.header("Origin") !== new URL(c.req.url).origin) return c.json({ error: "Cross-site upload refused." }, 403);
-  const session = await getSession(c);
-  if (!session) return c.json({ error: "Signed out. Reload the page to sign in again." }, 401);
   const key = keyFromPath(c, "/api/files/");
   if (key === null) return c.json({ error: "That path doesn't decode." }, 400);
-  return uploadFile(c, key, session.username);
+  return uploadFile(c, key, c.get("session").username);
+});
+
+app.delete("/api/files/*", async (c) => {
+  const key = keyFromPath(c, "/api/files/");
+  if (key === null) return c.json({ error: "That path doesn't decode." }, 400);
+  return deleteFile(c, key, c.get("session").username);
+});
+
+app.post("/api/folders/*", async (c) => {
+  const key = keyFromPath(c, "/api/folders/");
+  if (key === null) return c.json({ error: "That path doesn't decode." }, 400);
+  return createFolder(c, key, c.get("session").username);
 });
 
 app.all("/api/*", (c) => c.json({ error: "Not found" }, 404));

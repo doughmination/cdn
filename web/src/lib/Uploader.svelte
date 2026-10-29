@@ -1,7 +1,7 @@
 <script lang="ts">
   // Upload panel shown in a folder to signed-in visitors. Files go one at a
   // time as raw PUTs to /api/files/<path>; the worker checks the SSO session
-  // and writes them into the R2 bucket, under this folder (or a new subfolder).
+  // and writes them into the R2 bucket, under this folder.
 
   import { untrack } from "svelte";
   import Icon from "./Icon.svelte";
@@ -14,9 +14,8 @@
     message: string;
   }
 
-  let { folder, onuploaded }: { folder: string; onuploaded: () => void } = $props();
+  let { folder, onchanged }: { folder: string; onchanged: () => Promise<void> } = $props();
 
-  let subInput = $state("");
   let overwrite = $state(false);
   let queue = $state<Item[]>([]);
   let busy = $state(false);
@@ -27,12 +26,9 @@
     folder;
     untrack(() => {
       if (!busy) queue = [];
-      subInput = "";
     });
   });
 
-  const sub = $derived(subInput.trim().replace(/^\/+|\/+$/g, "").replace(/\/{2,}/g, "/"));
-  const target = $derived([folder, sub].filter(Boolean).join("/"));
   const pending = $derived(queue.filter((q) => q.status === "waiting" || q.status === "error").length);
   const done = $derived(queue.filter((q) => q.status === "done").length);
 
@@ -79,7 +75,7 @@
 
   async function uploadAll() {
     busy = true;
-    const dir = target;
+    const dir = folder;
     for (const item of queue) {
       if (item.status === "waiting" || item.status === "error") await put(item, dir);
     }
@@ -87,7 +83,7 @@
     // Finished uploads now show in the listing, so only failures stay queued.
     if (done) {
       queue = queue.filter((q) => q.status !== "done");
-      onuploaded();
+      onchanged();
     }
   }
 
@@ -118,7 +114,7 @@
         e.currentTarget.value = "";
       }}
     />
-    <Icon name="upload" />Drop files here to upload to <strong>/{target}</strong>, or click to pick them.
+    <Icon name="upload" />Drop files here to upload to <strong>/{folder}</strong>, or click to pick them.
   </label>
 
   {#if queue.length}
@@ -146,7 +142,6 @@
       <button class="btn" type="button" disabled={busy || pending === 0} onclick={uploadAll}>
         {pending > 1 ? `Upload ${pending} files` : "Upload"}
       </button>
-      <input class="filter sub" type="text" placeholder="Into a subfolder (optional)" autocomplete="off" spellcheck="false" disabled={busy} bind:value={subInput} />
       <label><input type="checkbox" bind:checked={overwrite} /> Replace existing files</label>
     </div>
   {/if}

@@ -5,10 +5,20 @@
 
   import Crumbs from "../lib/Crumbs.svelte";
   import Hero from "../lib/Hero.svelte";
-  import { copyText, encodePath, fmtSize, type FileEntry } from "../lib/files";
+  import Icon from "../lib/Icon.svelte";
+  import { apiWrite, copyText, encodePath, fmtSize, type FileEntry } from "../lib/files";
+  import { navigate } from "../lib/router.svelte";
   import { extensionOf, kindOf } from "../../../shared/kinds";
 
-  let { file, raw }: { file: FileEntry; raw: string } = $props();
+  let {
+    file,
+    raw,
+    canEdit,
+    onchanged,
+  }: { file: FileEntry; raw: string; canEdit: boolean; onchanged: () => Promise<void> } = $props();
+
+  let deleting = $state(false);
+  let error = $state("");
 
   /** Bigger text files only get the links; nobody wants to scroll that. */
   const MAX_TEXT = 512 * 1024;
@@ -20,6 +30,18 @@
   // This preview page, as opposed to the raw file.
   const page = $derived(`${location.origin}/${encodePath(file.path)}`);
   const local = $derived(`/api/files/${encodePath(file.path)}`);
+
+  // Back to the folder afterwards; the worker keeps it even if it's now empty.
+  async function remove() {
+    if (!confirm(`Delete ${name}? Anything linking to it will break.`)) return;
+    deleting = true;
+    error = (await apiWrite("DELETE", local)) ?? "";
+    if (!error) {
+      await onchanged();
+      navigate(`/${encodePath(file.path.slice(0, Math.max(0, file.path.lastIndexOf("/"))))}`);
+    }
+    deleting = false;
+  }
 
   const text = $derived(
     kind === "text" && file.size <= MAX_TEXT
@@ -45,6 +67,10 @@
     <a class="btn" href={local} download={name}>Download</a>
     <button class="btn" type="button" title={page} onclick={(e) => copyText(e.currentTarget, page)}>Copy URL</button>
     <button class="btn" type="button" title={url} onclick={(e) => copyText(e.currentTarget, url)}>Copy raw</button>
+    {#if canEdit}
+      <button class="btn danger" type="button" disabled={deleting} onclick={remove}><Icon name="trash" />Delete</button>
+    {/if}
+    {#if error}<span class="status err">{error}</span>{/if}
   </div>
 
   <div class="preview">

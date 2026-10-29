@@ -36,6 +36,18 @@ export async function fetchMe(): Promise<{ username: string } | null> {
   }
 }
 
+/** A write to the API (sign-in is checked there); an error message, or null when it worked. */
+export async function apiWrite(method: "POST" | "DELETE", url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { method });
+    if (res.ok) return null;
+    const body = await res.json().catch(() => null);
+    return body?.error || `Failed (${res.status}).`;
+  } catch {
+    return "Network error.";
+  }
+}
+
 /** Every folder in the listing, e.g. "img" and "img/avatars". */
 export function allFolders(files: FileEntry[]): string[] {
   const dirs = new Set<string>();

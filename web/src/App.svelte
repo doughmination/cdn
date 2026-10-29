@@ -13,9 +13,9 @@
   let me = $state<{ username: string } | null>(null);
 
   // Fetched once whatever page the visit starts on, since in-app navigation
-  // never reloads. After an upload it's refetched fresh.
+  // never reloads. After any change it's refetched fresh.
   function load(fresh = false) {
-    fetchList(fresh)
+    return fetchList(fresh)
       .then((l) => {
         listing = l;
         failed = false;
@@ -47,9 +47,9 @@
   {:else if path === null}
     <NotFound />
   {:else if file && listing}
-    <Preview {file} raw={listing.raw} />
+    <Preview {file} raw={listing.raw} canEdit={Boolean(me)} onchanged={() => load(true)} />
   {:else}
-    <Browse prefix={path} {listing} {failed} canUpload={Boolean(me)} onuploaded={() => load(true)} />
+    <Browse prefix={path} {listing} {failed} canEdit={Boolean(me)} onchanged={() => load(true)} />
   {/if}
 </main>
 <Footer count={listing?.count} />

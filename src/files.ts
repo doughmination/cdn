@@ -1,6 +1,7 @@
 // Everything backed by the R2 bucket: serving files, listing them for the
-// browser, and uploads.
+// browser, and uploads, new folders and deletes.
 
+import { FOLDER_MARKER } from "../shared/folders";
 import { rawBase, type AppContext } from "./env";
 
 /** Browser cache for served files. URLs can change any time, so nothing longer. */
@@ -156,6 +157,39 @@ export async function uploadFile(c: AppContext, key: string, uploader: string): 
     customMetadata: { uploadedBy: uploader },
   });
   return c.json({ path: obj.key, size: obj.size, url: `${rawBase(c.env)}/${encodeKey(obj.key)}` }, 201);
+}
+
+/** POST /api/folders/<key> — an empty folder, held open by its marker. */
+export async function createFolder(c: AppContext, key: string, uploader: string): Promise<Response> {
+  const bad = checkKey(key);
+  if (bad) return c.json({ error: bad }, 400);
+  if (await c.env.BUCKET.head(key)) return c.json({ error: "A file already exists at that path." }, 409);
+  if (await isFolder(c, key)) return c.json({ error: "That folder already exists." }, 409);
+
+  await c.env.BUCKET.put(`${key}/${FOLDER_MARKER}`, "", { customMetadata: { uploadedBy: uploader } });
+  return c.json({ path: key }, 201);
+}
+
+/**
+ * DELETE /api/files/<key> — one file, or a folder's marker (which deletes that
+ * empty folder). Whatever folder the viewer goes back to afterwards keeps
+ * existing, with a marker if nothing else is left in it.
+ */
+export async function deleteFile(c: AppContext, key: string, uploader: string): Promise<Response> {
+  if (!(await c.env.BUCKET.head(key))) return c.json({ error: "No file at that path." }, 404);
+  await c.env.BUCKET.delete(key);
+
+  const deleted = key.endsWith(`/${FOLDER_MARKER}`) ? parentOf(key) : key;
+  const keep = parentOf(deleted);
+  if (keep && !(await isFolder(c, keep))) {
+    await c.env.BUCKET.put(`${keep}/${FOLDER_MARKER}`, "", { customMetadata: { uploadedBy: uploader } });
+  }
+  return c.body(null, 204);
+}
+
+/** "img/avatars/x.png" → "img/avatars"; "" at the top level. */
+function parentOf(key: string): string {
+  return key.slice(0, Math.max(0, key.lastIndexOf("/")));
 }
 
 export function encodeKey(key: string): string {

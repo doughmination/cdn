@@ -17,7 +17,8 @@ export interface Session {
   username: string;
 }
 
-export type AppEnv = { Bindings: Env };
+// `session` is set on API writes, by the guard in main.ts.
+export type AppEnv = { Bindings: Env; Variables: { session: Session } };
 export type AppContext = Context<AppEnv>;
 
 export function issuer(env: Env): string {
