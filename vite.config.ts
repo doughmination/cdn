@@ -8,6 +8,10 @@ export default defineConfig({
   root: "web",
   publicDir: "../public",
   plugins: [svelte()],
+  // iconsax fetches its icon data relative to its own file, which pre-bundling breaks
+  optimizeDeps: {
+    exclude: ["iconsax"],
+  },
   build: {
     outDir: "../dist",
     emptyOutDir: true,
