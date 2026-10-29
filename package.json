@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "hono": "^4.13.13",
+    "iconsax": "0.1.1",
     "jose": "^6.2.13",
     "marked": "^18.1.1"
   },
