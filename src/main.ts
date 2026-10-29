@@ -5,7 +5,7 @@
 // Order of business for a request:
 //
 //   1. CORS (allowlisted origins get Access-Control-Allow-Origin)
-//   2. Worker routes: sign-in, the upload page + API, the Genshin proxy
+//   2. Worker routes: sign-in, the upload API, the Genshin proxy
 //   3. Static site files (the Svelte app from ./dist, styles, .well-known, …)
 //   4. Otherwise the app shell, if the path is a folder or a file in R2:
 //      /img browses "img/", /img/foo.png previews that file (with link-embed
@@ -33,15 +33,10 @@ app.route("/", auth);
 
 // --- upload -------------------------------------------------------------------------
 
-app.get("/upload", async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    const url = new URL(c.req.url);
-    return c.redirect(`/login?next=${encodeURIComponent(url.pathname + url.search)}`);
-  }
-  const res = await shell(c);
-  res.headers.set("Cache-Control", "no-store");
-  return res;
+// Uploads happen in the folder itself now; old /upload?folder= links land there.
+app.get("/upload", (c) => {
+  const folder = (c.req.query("folder") ?? "").replace(/^\/+|\/+$/g, "");
+  return c.redirect(`/${folder.split("/").map(encodeURIComponent).join("/")}`);
 });
 
 app.get("/api/me", async (c) => {
@@ -58,7 +53,7 @@ app.get("/api/files/*", async (c) => {
 });
 
 app.put("/api/files/*", async (c) => {
-  // CSRF: the cookie is SameSite=Lax already, and uploads must come from this page.
+  // CSRF: the cookie is SameSite=Lax already, and uploads must come from this site.
   if (c.req.header("Origin") !== new URL(c.req.url).origin) return c.json({ error: "Cross-site upload refused." }, 403);
   const session = await getSession(c);
   if (!session) return c.json({ error: "Signed out. Reload the page to sign in again." }, 401);

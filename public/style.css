@@ -272,12 +272,7 @@ header nav a[aria-current="page"] { color: var(--text); }
 
 /* Pill buttons */
 
-.folderbar { margin-bottom: 1rem; }
-.folderbar:empty { margin-bottom: 0; }
-
-.folderbtn,
 .btn,
-.row .copy,
 .row .remove {
   display: inline-flex;
   gap: 0.4em;
@@ -294,16 +289,13 @@ header nav a[aria-current="page"] { color: var(--text); }
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.row .copy,
 .row .remove {
   padding: 0.15rem 0.7rem;
   color: var(--muted);
   font-size: 0.8rem;
 }
 
-.folderbtn:hover,
 .btn:hover:not(:disabled),
-.row .copy:hover,
 .row .remove:hover {
   border-color: rgb(235 69 158 / 40%);
   box-shadow: 0 0 0 4px var(--accent-dim);
@@ -367,26 +359,28 @@ header nav a[aria-current="page"] { color: var(--text); }
   color: var(--muted);
 }
 
-/* Upload page */
+/* Upload panel (in a folder, signed in) */
 
-.field {
-  display: block;
-  margin: 0 0 1rem;
+.uploader { margin-bottom: 1.5rem; }
+.uploader .listing { margin-bottom: 1rem; }
+.uploader .actions { margin-bottom: 0; }
+
+.uploader .sub {
+  flex: 1;
+  min-width: 12rem;
+  width: auto;
+  margin-bottom: 0;
+  padding: 0.35rem 0.9rem;
 }
-
-.field .label {
-  display: block;
-  margin-bottom: 0.3rem;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.field .filter { margin-bottom: 0; }
 
 .drop {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 1rem;
-  padding: 2.5rem 1rem;
+  padding: 1.5rem 1rem;
   border: 1px dashed var(--line);
   border-radius: 1rem;
   background: var(--raised);
@@ -403,6 +397,8 @@ header nav a[aria-current="page"] { color: var(--text); }
   box-shadow: 0 0 0 4px var(--accent-dim);
   color: var(--text);
 }
+
+.drop strong { color: var(--text); font-weight: 500; overflow-wrap: anywhere; }
 
 .drop input {
   position: absolute;
@@ -543,9 +539,7 @@ footer img { border-radius: 50%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .folderbtn,
   .btn,
-  .row .copy,
   .row .remove,
   .drop { transition: none; }
 }

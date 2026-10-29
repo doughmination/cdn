@@ -7,19 +7,23 @@
   import Licence from "./routes/Licence.svelte";
   import NotFound from "./routes/NotFound.svelte";
   import Preview from "./routes/Preview.svelte";
-  import Upload from "./routes/Upload.svelte";
 
   let listing = $state<Listing | null>(null);
   let failed = $state(false);
-  let canUpload = $state(false);
+  let me = $state<{ username: string } | null>(null);
 
-  // The upload page fetches its own (fresh) copy.
-  if (route.path !== "/upload") {
-    fetchList()
-      .then((l) => (listing = l))
+  // Fetched once whatever page the visit starts on, since in-app navigation
+  // never reloads. After an upload it's refetched fresh.
+  function load(fresh = false) {
+    fetchList(fresh)
+      .then((l) => {
+        listing = l;
+        failed = false;
+      })
       .catch(() => (failed = true));
-    fetchMe().then((me) => (canUpload = Boolean(me)));
   }
+  load();
+  fetchMe().then((m) => (me = m));
 
   // "/img/avatars/" → "img/avatars"; null if the path doesn't decode.
   const path = $derived.by(() => {
@@ -36,18 +40,16 @@
   );
 </script>
 
-<Header />
+<Header {me} />
 <main class="wrap">
-  {#if route.path === "/upload"}
-    <Upload />
-  {:else if route.path === "/licence"}
+  {#if route.path === "/licence"}
     <Licence />
   {:else if path === null}
     <NotFound />
   {:else if file && listing}
     <Preview {file} raw={listing.raw} />
   {:else}
-    <Browse prefix={path} {listing} {failed} {canUpload} />
+    <Browse prefix={path} {listing} {failed} canUpload={Boolean(me)} onuploaded={() => load(true)} />
   {/if}
 </main>
 <Footer count={listing?.count} />

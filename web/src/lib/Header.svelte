@@ -2,6 +2,8 @@
   import { link, route } from "./router.svelte";
   import { AVATAR, SITE_NAME } from "./site";
 
+  let { me }: { me: { username: string } | null } = $props();
+
   const current = (path: string) => (route.path === path ? "page" : undefined);
 </script>
 
@@ -15,9 +17,13 @@
   </a>
   <nav>
     <a href="/" use:link aria-current={current("/")}>Files</a>
-    <!-- Not use:link: the worker sends signed-out visitors to sign in first. -->
-    <a href="/upload" aria-current={current("/upload")}>Upload</a>
     <a href="/licence" use:link aria-current={current("/licence")}>Licence</a>
+    <!-- Not use:link: both go through the worker. Signing in comes back to this page. -->
+    {#if me}
+      <a href="/logout" title="Signed in as @{me.username}">Sign out</a>
+    {:else}
+      <a href="/login?next={encodeURIComponent(route.path)}">Sign in</a>
+    {/if}
     <a href="https://doughmination.gay">doughmination.gay</a>
   </nav>
 </header>

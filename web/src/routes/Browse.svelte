@@ -5,7 +5,8 @@
   import Crumbs from "../lib/Crumbs.svelte";
   import Hero from "../lib/Hero.svelte";
   import Icon from "../lib/Icon.svelte";
-  import { copyText, encodePath, fmtSize, type Listing } from "../lib/files";
+  import Uploader from "../lib/Uploader.svelte";
+  import { encodePath, fmtSize, type Listing } from "../lib/files";
   import { link } from "../lib/router.svelte";
   import NotFound from "./NotFound.svelte";
 
@@ -14,7 +15,9 @@
     listing,
     failed,
     canUpload,
-  }: { prefix: string; listing: Listing | null; failed: boolean; canUpload: boolean } = $props();
+    onuploaded,
+  }: { prefix: string; listing: Listing | null; failed: boolean; canUpload: boolean; onuploaded: () => void } =
+    $props();
 
   let filter = $state("");
 
@@ -47,7 +50,6 @@
   const files = $derived(children.files.filter((f) => !q || f.name.toLowerCase().includes(q)));
   const missing = $derived(listing !== null && prefix !== "" && !children.folders.length && !children.files.length);
 
-  const fileUrl = (path: string) => `${listing!.raw}/${encodePath(path)}`;
   const childHref = (name: string) => `/${encodePath(prefix ? `${prefix}/${name}` : name)}`;
 </script>
 
@@ -71,12 +73,10 @@
   <div class="content">
     <Crumbs path={prefix} />
 
-    <!-- Uploaders get a shortcut to the upload page, aimed at this folder. -->
-    <div class="folderbar">
-      {#if canUpload}
-        <a class="folderbtn" href="/upload?folder={encodeURIComponent(prefix)}"><Icon name="upload" />Upload here</a>
-      {/if}
-    </div>
+    <!-- Signed-in visitors upload straight into the folder they're looking at. -->
+    {#if canUpload}
+      <Uploader folder={prefix} {onuploaded} />
+    {/if}
 
     <input class="filter" type="search" placeholder="Filter this folder…" autocomplete="off" bind:value={filter} />
 
@@ -95,7 +95,6 @@
           <li class="row file">
             <a class="name" href={childHref(f.name)} use:link><Icon name="file" />{f.name}</a>
             <span class="size">{fmtSize(f.size)}</span>
-            <button class="copy" title="Copy URL" onclick={(e) => copyText(e.currentTarget, fileUrl(f.path))}>copy</button>
           </li>
         {:else}
           {#if !folders.length}<li class="row empty">Nothing here.</li>{/if}

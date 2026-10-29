@@ -63,7 +63,7 @@ const cookieOpts = (maxAge: number) =>
 
 /** Only same-site paths, so /login can't be used as an open redirect. */
 function safeNext(raw: string | undefined): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") ? raw : "/upload";
+  return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") ? raw : "/";
 }
 
 function redirectUri(c: AppContext): string {

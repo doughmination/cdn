@@ -17,6 +17,8 @@
   const ext = $derived(extensionOf(file.path));
   const kind = $derived(kindOf(file.path));
   const url = $derived(`${raw}/${encodePath(file.path)}`);
+  // This preview page, as opposed to the raw file.
+  const page = $derived(`${location.origin}/${encodePath(file.path)}`);
   const local = $derived(`/api/files/${encodePath(file.path)}`);
 
   const text = $derived(
@@ -41,7 +43,8 @@
   <div class="actions">
     <a class="btn" href={url} target="_blank" rel="noopener">Open raw</a>
     <a class="btn" href={local} download={name}>Download</a>
-    <button class="btn" type="button" onclick={(e) => copyText(e.currentTarget, url)}>Copy URL</button>
+    <button class="btn" type="button" title={page} onclick={(e) => copyText(e.currentTarget, page)}>Copy URL</button>
+    <button class="btn" type="button" title={url} onclick={(e) => copyText(e.currentTarget, url)}>Copy raw</button>
   </div>
 
   <div class="preview">
