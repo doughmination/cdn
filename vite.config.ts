@@ -3,15 +3,19 @@
 
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "vite";
+import Icons from "unplugin-icons/vite";
 
 export default defineConfig({
   root: "web",
   publicDir: "../public",
-  plugins: [svelte()],
-  // iconsax fetches its icon data relative to its own file, which pre-bundling breaks
-  optimizeDeps: {
-    exclude: ["iconsax"],
-  },
+  plugins: [
+    svelte(),
+    // Turns each `~icons/<set>/<name>` import into an inline-SVG Svelte component at build time
+    Icons({
+      compiler: "svelte",
+      scale: 1,
+    }),
+  ],
   build: {
     outDir: "../dist",
     emptyOutDir: true,

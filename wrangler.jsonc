@@ -13,7 +13,7 @@
 	// runs first on every request so it can add CORS headers, split the m. and
 	// fall back to the app shell for folder and file paths.
 	"build": {
-		"command": "npx vite build",
+		"command": "deno task build",
 		"watch_dir": ["web", "public"]
 	},
 	"assets": {

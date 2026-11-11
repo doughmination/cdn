@@ -560,9 +560,10 @@ footer img { border-radius: 50%; }
   .drop { transition: none; }
 }
 
-/* iconsax renders its <svg> inside the element */
-iconsax-icon {
-  display: inline-flex;
+/* Material icons from Icon.svelte, sized to match the old 15px glyphs */
+.icon {
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
   vertical-align: -0.2em;
   margin-right: 0.35em;

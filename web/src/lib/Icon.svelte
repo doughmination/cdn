@@ -1,14 +1,24 @@
+<!-- web/src/lib/Icon.svelte -->
+
 <script lang="ts">
-  // The icons the browser uses, from iconsax like the rest of doughmination.gay
-  const NAMES = {
-    folder: "folder-2",
-    file: "document",
-    upload: "document-upload",
-    "new-folder": "folder-add",
-    trash: "trash",
+  // Material outline icons, inlined as SVG at build time like the rest of doughmination.gay
+  import IcFolder from "~icons/ic/outline-folder";
+  import IcDescription from "~icons/ic/outline-description";
+  import IcUploadFile from "~icons/ic/outline-upload-file";
+  import IcCreateNewFolder from "~icons/ic/outline-create-new-folder";
+  import IcDelete from "~icons/ic/outline-delete";
+
+  const ICONS = {
+    folder: IcFolder,
+    file: IcDescription,
+    upload: IcUploadFile,
+    "new-folder": IcCreateNewFolder,
+    trash: IcDelete,
   };
 
-  let { name }: { name: keyof typeof NAMES } = $props();
+  let { name }: { name: keyof typeof ICONS } = $props();
+
+  const Glyph = $derived(ICONS[name]);
 </script>
 
-<iconsax-icon name={NAMES[name]} type="bulk" size="15" aria-hidden="true"></iconsax-icon>
+<Glyph class="icon" aria-hidden="true" />
