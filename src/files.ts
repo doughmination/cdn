@@ -122,8 +122,38 @@ function fileHeaders(obj: R2Object): Headers {
   return headers;
 }
 
-/** GET /api/list — flat list of every object, for the browser. */
-export async function listFiles(c: AppContext): Promise<Response> {
+// Seconds the listing stays in the edge cache. Writes purge it in their own
+// data centre; the others catch up when this runs out.
+const LIST_TTL = 60;
+
+function listCacheKey(c: AppContext): Request {
+  return new Request(new URL("/api/list", c.req.url).href);
+}
+
+/** Drops the cached listing. Called after every upload, new folder and delete. */
+async function purgeList(c: AppContext): Promise<void> {
+  await caches.default.delete(listCacheKey(c));
+}
+
+async function etagOf(body: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(body));
+  const hex = [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+  return `"${hex}"`;
+}
+
+/** True if the browser's If-None-Match names this ETag (weak or strong). */
+function etagMatches(header: string | undefined, etag: string | null): boolean {
+  if (!header || !etag) return false;
+  return header
+    .split(",")
+    .map((value) => value.trim().replace(/^W\//, ""))
+    .includes(etag);
+}
+
+/** Scans the whole bucket and builds the listing response. */
+async function buildList(c: AppContext): Promise<Response> {
   const files: { path: string; size: number }[] = [];
   let cursor: string | undefined;
   do {
@@ -132,8 +162,40 @@ export async function listFiles(c: AppContext): Promise<Response> {
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor);
 
-  c.header("Cache-Control", "public, max-age=60");
-  return c.json({ count: files.length, raw: rawBase(c.env), files });
+  const body = JSON.stringify({
+    count: files.length,
+    raw: rawBase(c.env),
+    files,
+  });
+
+  return new Response(body, {
+    headers: {
+      "Content-Type": "application/json",
+      // Browsers revalidate (a 304 when nothing changed); the edge keeps it for LIST_TTL
+      "Cache-Control": `public, max-age=0, s-maxage=${LIST_TTL}`,
+      ETag: await etagOf(body),
+    },
+  });
+}
+
+/**
+ * GET /api/list — flat list of every object, for the browser. Served from the
+ * edge cache when it can be; ?fresh=1 skips the cache and refills it.
+ */
+export async function listFiles(c: AppContext): Promise<Response> {
+  const cacheKey = listCacheKey(c);
+  const fresh = c.req.query("fresh") === "1";
+
+  let response = fresh ? undefined : await caches.default.match(cacheKey);
+  if (!response) {
+    response = await buildList(c);
+    c.executionCtx.waitUntil(caches.default.put(cacheKey, response.clone()));
+  }
+
+  if (etagMatches(c.req.header("If-None-Match"), response.headers.get("ETag"))) {
+    return new Response(null, { status: 304, headers: response.headers });
+  }
+  return response;
 }
 
 /** PUT /api/files/<key> — raw request body becomes the object. */
@@ -156,6 +218,7 @@ export async function uploadFile(c: AppContext, key: string, uploader: string): 
     httpMetadata: { contentType },
     customMetadata: { uploadedBy: uploader },
   });
+  await purgeList(c);
   return c.json({ path: obj.key, size: obj.size, url: `${rawBase(c.env)}/${encodeKey(obj.key)}` }, 201);
 }
 
@@ -167,6 +230,7 @@ export async function createFolder(c: AppContext, key: string, uploader: string)
   if (await isFolder(c, key)) return c.json({ error: "That folder already exists." }, 409);
 
   await c.env.BUCKET.put(`${key}/${FOLDER_MARKER}`, "", { customMetadata: { uploadedBy: uploader } });
+  await purgeList(c);
   return c.json({ path: key }, 201);
 }
 
@@ -184,6 +248,7 @@ export async function deleteFile(c: AppContext, key: string, uploader: string): 
   if (keep && !(await isFolder(c, keep))) {
     await c.env.BUCKET.put(`${keep}/${FOLDER_MARKER}`, "", { customMetadata: { uploadedBy: uploader } });
   }
+  await purgeList(c);
   return c.body(null, 204);
 }
 

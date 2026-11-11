@@ -23,7 +23,10 @@ export function encodePath(path: string): string {
 }
 
 export async function fetchList(fresh = false): Promise<Listing> {
-  const res = await fetch("/api/list", { cache: fresh ? "no-store" : "no-cache" });
+  // ?fresh=1 makes the worker skip its edge cache too
+  const res = fresh
+    ? await fetch("/api/list?fresh=1", { cache: "no-store" })
+    : await fetch("/api/list", { cache: "no-cache" });
   if (!res.ok) throw new Error(`list failed: ${res.status}`);
   return res.json();
 }

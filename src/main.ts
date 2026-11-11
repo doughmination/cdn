@@ -101,7 +101,7 @@ app.get("/.well-known/change-password", (c) => c.redirect(`${issuer(c.env)}/acco
 
 app.get("*", async (c) => {
   const asset = await c.env.ASSETS.fetch(c.req.raw);
-  if (asset.status !== 404) return asset;
+  if (asset.status !== 404) return withAssetCache(c, asset);
 
   const key = keyFromPath(c);
   if (key === null) return notFound(c);
@@ -109,6 +109,28 @@ app.get("*", async (c) => {
   if (obj) return fileEmbed(c, obj, await shell(c));
   return (await isFolder(c, key.replace(/\/+$/, ""))) ? shell(c) : notFound(c);
 });
+
+// Vite's hashed bundle files: a new build gets a new name, so they never change
+const HASHED_ASSET = /^\/_app\/[^/]+-[A-Za-z0-9_-]{8}\.(js|css)$/;
+
+const HASHED_CACHE = "public, max-age=31536000, immutable";
+
+// Fonts and the background keep their names, so they get a month instead
+const APP_CACHE = "public, max-age=2592000";
+
+/** Static assets default to max-age=0; everything under /_app can be kept. */
+function withAssetCache(c: AppContext, asset: Response): Response {
+  const pathname = new URL(c.req.url).pathname;
+  const cacheable = asset.status === 200 || asset.status === 304;
+  if (!cacheable || !pathname.startsWith("/_app/")) return asset;
+
+  const response = new Response(asset.body, asset);
+  response.headers.set(
+    "Cache-Control",
+    HASHED_ASSET.test(pathname) ? HASHED_CACHE : APP_CACHE,
+  );
+  return response;
+}
 
 /** The R2 key a path names (after `prefix`), or null if it doesn't decode. */
 function keyFromPath(c: AppContext, prefix = "/"): string | null {
