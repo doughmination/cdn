@@ -11,3 +11,6 @@ node_modules
 !.dev.vars.example
 assets/
 dist/
+
+# Deno fetched by scripts/ci.sh in CI
+.deno/
