@@ -1,14 +1,15 @@
 // What a file is, going by its extension. Shared by the worker (link embeds)
 // and the viewer (previews).
 
-export type Kind = "image" | "video" | "audio" | "pdf" | "text";
+export type Kind = "image" | "video" | "audio" | "pdf" | "model" | "text";
 
 const EXTENSIONS: Record<Kind, string> = {
   image: "png jpg jpeg gif webp avif svg ico bmp",
   video: "mp4 webm mov",
   audio: "mp3 ogg wav flac m4a",
   pdf: "pdf",
-  text: "txt md json js mjs cjs ts css html xml csv tsv yml yaml toml ini log sh ps1 py gltf",
+  model: "glb gltf",
+  text: "txt md json js mjs cjs ts css html xml csv tsv yml yaml toml ini log sh ps1 py",
 };
 
 const KINDS: Record<string, Kind> = Object.fromEntries(

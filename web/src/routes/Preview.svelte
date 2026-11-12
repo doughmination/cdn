@@ -83,6 +83,15 @@
       <audio src={url} controls preload="metadata"></audio>
     {:else if kind === "pdf"}
       <iframe src={url} title={name}></iframe>
+    {:else if kind === "model"}
+      <!-- Same-origin URL: three.js fetches it, and raw has no CORS for this site -->
+      {#await import("../lib/ModelViewer.svelte")}
+        <p class="empty">Loading viewer…</p>
+      {:then { default: ModelViewer }}
+        <ModelViewer src={local} {name} />
+      {:catch}
+        <p class="empty">Couldn't load the 3D viewer.</p>
+      {/await}
     {:else if text}
       {#await text}
         <p class="empty">Loading…</p>
