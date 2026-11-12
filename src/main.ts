@@ -5,7 +5,7 @@
 // Order of business for a request:
 //
 //   1. CORS (allowlisted origins get Access-Control-Allow-Origin)
-//   2. Worker routes: sign-in, the file API (uploads, folders, deletes), the Genshin proxy
+//   2. Worker routes: sign-in, the file API (uploads, folders, deletes)
 //   3. Static site files (the Svelte app from ./dist, styles, .well-known, …)
 //   4. Otherwise the app shell, if the path is a folder or a file in R2:
 //      /img browses "img/", /img/foo.png previews that file (with link-embed
@@ -18,7 +18,6 @@ import { cors } from "./cors";
 import { fileEmbed } from "./embed";
 import { issuer, type AppContext, type AppEnv } from "./env";
 import { createFolder, deleteFile, isFolder, listFiles, serveFile, uploadFile } from "./files";
-import { genshinUi } from "./genshin";
 
 const app = new Hono<AppEnv>();
 
@@ -83,8 +82,6 @@ app.post("/api/folders/*", async (c) => {
 app.all("/api/*", (c) => c.json({ error: "Not found" }, 404));
 
 // --- misc ---------------------------------------------------------------------------
-
-app.get("/genshin/ui/:name", genshinUi);
 
 app.get("/licence", (c) => shell(c));
 app.get("/licence.html", (c) => c.redirect("/licence", 301));

@@ -14,3 +14,6 @@ dist/
 
 # Deno fetched by scripts/ci.sh in CI
 .deno/
+
+# Downloaded Genshin images, see scripts/syncGenshin.ts
+.genshin-cache/
