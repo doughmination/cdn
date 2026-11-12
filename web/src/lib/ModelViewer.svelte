@@ -109,16 +109,21 @@
       },
     );
 
-    const clock = new THREE.Clock();
-    renderer.setAnimationLoop(() => {
+    // Pauses while the tab is hidden, so animations don't jump on return
+    const timer = new THREE.Timer();
+    timer.connect(document);
+
+    renderer.setAnimationLoop((timestamp) => {
+      timer.update(timestamp);
       controls.autoRotate = spinning;
       controls.update();
-      mixer?.update(clock.getDelta());
+      mixer?.update(timer.getDelta());
       renderer.render(scene, camera);
     });
 
     return () => {
       renderer.setAnimationLoop(null);
+      timer.dispose();
       observer.disconnect();
       controls.dispose();
       draco.dispose();
