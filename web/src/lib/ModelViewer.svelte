@@ -6,6 +6,7 @@
 
   import { onMount } from "svelte";
   import * as THREE from "three";
+  import { DRACO_GLTF_CONFIG, DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
   import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
   import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
   import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -74,8 +75,13 @@
     }
 
     let mixer: THREE.AnimationMixer | undefined;
+    // The glTF-only decoder that ships with three; Vite bundles it into /_app/
+    const draco = new DRACOLoader();
+    draco.setDecoderPath(DRACO_GLTF_CONFIG);
+
     const loader = new GLTFLoader();
     loader.setMeshoptDecoder(MeshoptDecoder);
+    loader.setDRACOLoader(draco);
 
     loader.load(
       src,
@@ -115,6 +121,7 @@
       renderer.setAnimationLoop(null);
       observer.disconnect();
       controls.dispose();
+      draco.dispose();
       environment.dispose();
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
