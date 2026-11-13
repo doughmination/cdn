@@ -23,10 +23,12 @@ export function encodePath(path: string): string {
 }
 
 export async function fetchList(fresh = false): Promise<Listing> {
-  // ?fresh=1 makes the worker skip its edge cache too
+  // ?fresh=1 makes the worker skip its edge cache too.
+  // The plain fetch keeps the default cache mode so it picks up the
+  // <link rel="preload"> in index.html; max-age=0 still revalidates it.
   const res = fresh
     ? await fetch("/api/list?fresh=1", { cache: "no-store" })
-    : await fetch("/api/list", { cache: "no-cache" });
+    : await fetch("/api/list");
   if (!res.ok) throw new Error(`list failed: ${res.status}`);
   return res.json();
 }

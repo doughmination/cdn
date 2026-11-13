@@ -4,9 +4,12 @@
   import Header from "./lib/Header.svelte";
   import { route } from "./lib/router.svelte";
   import Browse from "./routes/Browse.svelte";
-  import Licence from "./routes/Licence.svelte";
   import NotFound from "./routes/NotFound.svelte";
-  import Preview from "./routes/Preview.svelte";
+
+  // Split into their own chunks: most visits only ever browse.
+  // Licence pulls in marked, Preview the media and text viewers.
+  const loadLicence = () => import("./routes/Licence.svelte");
+  const loadPreview = () => import("./routes/Preview.svelte");
 
   let listing = $state<Listing | null>(null);
   let failed = $state(false);
@@ -42,7 +45,8 @@
       (entry) => entry.path === target || entry.path.startsWith(`${target}/`),
     );
   }
-  load();
+  // Fetches the Preview chunk once the list is in, so opening a file doesn't wait on it
+  load().then(() => loadPreview()).catch(() => {});
   fetchMe().then((m) => (me = m));
 
   // "/img/avatars/" → "img/avatars"; null if the path doesn't decode.
@@ -57,11 +61,19 @@
 <Header {me} />
 <main class="wrap">
   {#if route.path === "/licence"}
-    <Licence />
+    {#await loadLicence() then { default: Licence }}
+      <Licence />
+    {:catch}
+      <p class="empty">Couldn't load this page. Try reloading.</p>
+    {/await}
   {:else if path === null}
     <NotFound />
   {:else if file && listing}
-    <Preview {file} raw={listing.raw} canEdit={Boolean(me)} onchanged={() => load(true)} />
+    {#await loadPreview() then { default: Preview }}
+      <Preview {file} raw={listing.raw} canEdit={Boolean(me)} onchanged={() => load(true)} />
+    {:catch}
+      <p class="empty">Couldn't load the preview. Try reloading.</p>
+    {/await}
   {:else}
     <Browse prefix={path} {listing} {failed} canEdit={Boolean(me)} onchanged={() => load(true)} />
   {/if}

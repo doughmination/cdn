@@ -6,11 +6,13 @@
   import Crumbs from "../lib/Crumbs.svelte";
   import Hero from "../lib/Hero.svelte";
   import Icon from "../lib/Icon.svelte";
-  import Uploader from "../lib/Uploader.svelte";
   import { apiWrite, encodePath, fmtSize, type Listing } from "../lib/files";
   import { link, navigate } from "../lib/router.svelte";
   import { FOLDER_MARKER } from "../../../shared/folders";
   import NotFound from "./NotFound.svelte";
+
+  // Only signed-in visitors see the uploader, so everyone else skips its chunk
+  const loadUploader = () => import("../lib/Uploader.svelte");
 
   let {
     prefix,
@@ -134,7 +136,9 @@
         {#if error}<span class="status err">{error}</span>{/if}
       </div>
 
-      <Uploader folder={prefix} {onchanged} />
+      {#await loadUploader() then { default: Uploader }}
+        <Uploader folder={prefix} {onchanged} />
+      {/await}
     {/if}
 
     <input class="filter" type="search" placeholder="Filter this folder…" autocomplete="off" bind:value={filter} />

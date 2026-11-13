@@ -20,6 +20,8 @@
   <link rel="icon" href="/favicon.png" type="image/png" sizes="512x512">
   <link rel="apple-touch-icon" href="/favicon.png">
   <link rel="stylesheet" href="/style.css">
+  <!-- Starts the bucket listing now, instead of after the JS has loaded and run -->
+  <link rel="preload" href="/api/list" as="fetch" crossorigin>
 </head>
 <body>
   <div id="app" style="display: contents"></div>
